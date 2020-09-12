@@ -121,7 +121,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 6
+        return 7
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -129,14 +129,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 6:
-            self._logger.warn("######### migrating settings to v6 #########")
+        if current >= 4 and target == 7:
+            self._logger.warn("######### migrating settings to v7 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             for rpi_output in old_outputs:
                 if 'shutdown_on_failed' not in rpi_output:
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
+                if 'neopixel_striptype' not in rpi_output:
+                    rpi_output['neopixel_striptype'] = "WS2811_STRIP_RGB"
             self._settings.set(["rpi_outputs"], old_outputs)
         else:
             self._logger.warn("######### settings not compatible #########")
@@ -377,11 +379,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 led_count = rpi_output['neopixel_count']
                 led_brightness = rpi_output['neopixel_brightness']
                 address = rpi_output['microcontroller_address']
+                striptype = rpi_output['neopixel_striptype']
 
                 neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
 
                 self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green,
-                    blue, address, neopixel_dirrect, identifier)
+                    blue, address, striptype, neopixel_dirrect, identifier)
 
         return make_response('', 204)
 
@@ -553,11 +556,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 led_count = rpi_output['neopixel_count']
                 led_brightness = rpi_output['neopixel_brightness']
                 address = rpi_output['microcontroller_address']
+                striptype = rpi_output['neopixel_striptype']
 
                 neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
 
                 self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green,
-                    blue, address, neopixel_dirrect, gpio_index)
+                    blue, address, striptype, neopixel_dirrect, gpio_index)
 
         return jsonify(success=True)
 
@@ -578,7 +582,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
 
 
-    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
+    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, striptype, neopixel_dirrect,
                               index_id, queue_id=None):
         """Send neopixel command
 
@@ -611,12 +615,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 sudo_str = ""
 
-            cmd = sudo_str + "python " + script + str(led_pin) + " " + str(led_count) + " " + str(
+            cmd = sudo_str + sys.executable + " " + script + str(led_pin) + " " + str(led_count) + " " + str(
                 led_brightness) + " " + str(red) + " " + str(green) + " " + str(blue) + " "
 
             if neopixel_dirrect:
                 dma = self._settings.get(["neopixel_dma"]) or 10
-                cmd = cmd + str(dma)
+                cmd = cmd + str(dma) + " " + striptype
             else:
                 cmd = cmd + str(address)
 
@@ -1630,10 +1634,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     led_count = rpi_output['neopixel_count']
                     led_brightness = rpi_output['neopixel_brightness']
                     address = rpi_output['microcontroller_address']
+                    striptype = rpi_output['neopixel_striptype']
                     index_id = self.to_int(rpi_output['index_id'])
                     neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
                     self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red,
-                                               green, blue, address, neopixel_direct, index_id)
+                                               green, blue, address, striptype, neopixel_direct, index_id)
                 if rpi_output['output_type'] == 'temp_hum_control':
                     rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
 
@@ -1681,6 +1686,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         ledCount = rpi_output['neopixel_count']
         ledBrightness = rpi_output['neopixel_brightness']
         address = rpi_output['microcontroller_address']
+        striptype = rpi_output['neopixel_striptype']
         neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
         index_id = self.to_int(rpi_output['index_id'])
 
@@ -1689,7 +1695,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.debug("Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds, self.send_neopixel_command,
-                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct,
+                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, striptype, neopixel_direct,
                                        index_id, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
@@ -1856,13 +1862,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     led_count = output['neopixel_count']
                     led_brightness = output['neopixel_brightness']
                     address = output['microcontroller_address']
+                    striptype = output['neopixel_striptype']
 
                     index_id = self.to_int(output['index_id'])
 
                     neopixel_direct = output['output_type'] == 'neopixel_direct'
 
                     self.send_neopixel_command(self.to_int(output['gpio_pin']), led_count, led_brightness, red, green,
-                        blue, address, neopixel_direct, index_id)
+                        blue, address, striptype, neopixel_direct, index_id)
                     comm_instance._log(
                         "Setting NEOPIXEL output %s to red: %s green: %s blue: %s" % (index_id, red, green, blue))
                     return

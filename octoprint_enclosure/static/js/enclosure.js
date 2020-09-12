@@ -414,6 +414,7 @@ $(function () {
         new_neopixel_color: ko.observable(""),
         neopixel_count: ko.observable(0),
         neopixel_brightness: ko.observable(255),
+        neopixel_striptype: ko.observable("WS2811_STRIP_RGB"),
         ledstrip_color: ko.observable("rgb(0,0,0)"),
         default_ledstrip_color: ko.observable(""),
         new_ledstrip_color: ko.observable(""),

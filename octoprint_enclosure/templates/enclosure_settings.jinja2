@@ -455,6 +455,28 @@
         <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Strip type') }}</label>
+      <div class="controls">
+        <select class="input-block-level" data-bind="value: neopixel_striptype">
+          <option value="WS2811_STRIP_RGB">WS2811_STRIP_RGB</option>
+          <option value="WS2811_STRIP_RBG">WS2811_STRIP_RBG</option>
+          <option value="WS2811_STRIP_GRB">WS2811_STRIP_GRB</option>
+          <option value="WS2811_STRIP_GBR">WS2811_STRIP_GBR</option>
+          <option value="WS2811_STRIP_BRG">WS2811_STRIP_BRG</option>
+          <option value="WS2811_STRIP_BGR">WS2811_STRIP_BGR</option>
+
+          <option value="SK6812_STRIP_RGBW">SK6812_STRIP_RGBW</option>
+          <option value="SK6812_STRIP_RBGW">SK6812_STRIP_RBGW</option>
+          <option value="SK6812_STRIP_GRBW">SK6812_STRIP_GRBW</option>
+          <option value="SK6812_STRIP_GBRW">SK6812_STRIP_GBRW</option>
+          <option value="SK6812_STRIP_BRGW">SK6812_STRIP_BRGW</option>
+          <option value="SK6812_STRIP_BGRW">SK6812_STRIP_BGRW</option>
+          <option value="SK6812_SHIFT_WMASK">SK6812_SHIFT_WMASK</option>
+        </select>
+        <span class="help-inline">Type of your strip led</span>
+      </div>
+    </div> 
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "gcode_output")  -->
     <div class="control-group">
