@@ -25,8 +25,8 @@ strip.begin()
 
 color = Color(red, green, blue)
 
-if strip_type_name.startswith('SK6812') and red == 255 and blue == 255 and green == 255:
-    color = Color(0,0,0,255)
+if strip_type_name.startswith('SK6812') and red == blue == green == 255:
+    color = Color(0,0,0,red)
 
 
 for i in range(LED_COUNT):
