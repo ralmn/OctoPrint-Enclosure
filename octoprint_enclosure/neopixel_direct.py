@@ -25,7 +25,7 @@ strip.begin()
 
 color = Color(red, green, blue)
 
-if strip_type_name.startswith('SK6812') and red == blue == green == 255:
+if strip_type_name.startswith('SK6812') and red == blue == green:
     color = Color(0,0,0,red)
 
 
