@@ -887,7 +887,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Dht result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = (stdout.decode('ascii')).split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
